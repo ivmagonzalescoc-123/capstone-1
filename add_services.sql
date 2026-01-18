@@ -1,0 +1,17 @@
+INSERT INTO Services (service_name, initial_deposit, description, added_by) VALUES 
+('Scaling and Root Planing', 2500, 'Deep cleaning for gum disease treatment', 1),
+('Gum Disease Treatment', 3000, 'Treatment for periodontitis and gingivitis', 1),
+('Bonded Veneer', 8000, 'Cosmetic tooth veneer bonding', 1),
+('Ceramic Crown', 15000, 'Ceramic tooth crown installation', 1),
+('Braces (Ceramic)', 55000, 'Ceramic orthodontic braces', 1),
+('Clear Aligners (Invisalign)', 60000, 'Invisible teeth alignment system', 1),
+('Tooth Bonding', 3000, 'Composite resin bonding for damaged teeth', 1),
+('Wisdom Tooth Extraction', 3500, 'Surgical removal of wisdom teeth', 1),
+('Dental X-ray', 300, 'Digital radiographic imaging', 1),
+('Fluoride Treatment', 500, 'Protective fluoride application', 1),
+('Sealant Application', 600, 'Preventive dental sealants', 1),
+('Night Guard (Bruxism)', 2000, 'Custom-made night guard for teeth grinding', 1),
+('Partial Dentures', 15000, 'Removable partial dentures', 1),
+('Removable Braces', 35000, 'Removable orthodontic appliances', 1),
+('Teeth Desensitization', 1500, 'Treatment for sensitive teeth', 1),
+('Bite Correction', 20000, 'Occlusal adjustment and correction', 1);

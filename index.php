@@ -89,7 +89,6 @@ if ($conn->connect_error) {
 
         <div class="container hero-content">
             <h1>Welcome to Azucena's Dental Clinic</h1>
-            <p>Modern dental care with state-of-the-art technology and compassionate service</p>
             <div class="d-flex justify-content-center hero-buttons flex-wrap">
                 <button class="btn btn-primary-hero" data-bs-toggle="modal" data-bs-target="#loginModal">
                     Get Started
@@ -130,7 +129,7 @@ if ($conn->connect_error) {
                             <i class="bi bi-calendar2-check"></i>
                         </div>
                         <h4>Easy Scheduling</h4>
-                        <p>Book appointments online anytime, anywhere with our intuitive scheduling system</p>
+                        <p>Book appointments online anytime, anywhere </p>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -148,7 +147,7 @@ if ($conn->connect_error) {
                             <i class="bi bi-people"></i>
                         </div>
                         <h4>Expert Team</h4>
-                        <p>Our experienced dentists and hygienists are dedicated to your oral health</p>
+                        <p>Our experienced dentists are dedicated to your oral health</p>
                     </div>
                 </div>
             </div>
@@ -195,15 +194,15 @@ if ($conn->connect_error) {
             <div class="contact-info">
                 <div class="contact-item">
                     <i class="bi bi-telephone"></i>
-                    <p><strong>Phone</strong><br>(555) 123-4567</p>
+                    <p><strong>Phone</strong><br>0917 984 3031</p>
                 </div>
                 <div class="contact-item">
                     <i class="bi bi-envelope"></i>
-                    <p><strong>Email</strong><br>info@azucenadental.com</p>
+                    <p><strong>Email</strong><br>azucena@gmail.com</p>
                 </div>
                 <div class="contact-item">
                     <i class="bi bi-geo-alt"></i>
-                    <p><strong>Location</strong><br>123 Dental Street, City</p>
+                    <p><strong>Location</strong><br>Metz Arcade, Barangay 24, Capt. Vicente Roa St, Cagayan de Oro, 9000</p>
                 </div>
             </div>
         </div>

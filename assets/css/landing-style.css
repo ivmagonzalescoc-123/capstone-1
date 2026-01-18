@@ -418,8 +418,8 @@ body {
 
 /* ==================== FOOTER ==================== */
 footer {
-    background: #1a1a1a;
-    color: white;
+    background: #ebe5e5;
+    color: rgb(26, 24, 24);
     padding: 30px 0;
     text-align: center;
 }
