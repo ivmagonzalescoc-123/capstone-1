@@ -79,17 +79,34 @@ if ($result) {
                             <td>
                                 <?php
                                 $status = $apt['status_name'] ?? 'Pending';
+                                $status_desc = $status;
                                 $badge_class = 'badge-pending';
-                                if ($status === 'Confirmed') $badge_class = 'badge-confirmed';
-                                elseif ($status === 'Completed') $badge_class = 'badge-completed';
-                                elseif ($status === 'In-Queue') $badge_class = 'badge-info';
-                                elseif ($status === 'Cancelled') $badge_class = 'badge-cancelled';
+                                
+                                if ($status === 'Confirmed') {
+                                    $badge_class = 'badge-confirmed';
+                                    $status_desc = 'Confirmed';
+                                }
+                                elseif ($status === 'Completed') {
+                                    $badge_class = 'badge-completed';
+                                    $status_desc = 'Completed';
+                                }
+                                elseif ($status === 'In-Queue') {
+                                    $badge_class = 'badge-info';
+                                    $status_desc = 'In Queue';
+                                }
+                                elseif ($status === 'Cancelled') {
+                                    $badge_class = 'badge-cancelled';
+                                    $status_desc = 'Cancelled';
+                                }
+                                elseif ($status === 'Pending') {
+                                    $status_desc = 'Pending - Awaiting Confirmation';
+                                }
                                 ?>
-                                <span class="badge <?php echo $badge_class; ?>"><?php echo $status; ?></span>
+                                <span class="badge <?php echo $badge_class; ?>" title="<?php echo $status_desc; ?>"><?php echo $status_desc; ?></span>
                             </td>
                             <td>
                                 <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#appointmentModal" 
-                                    onclick="viewAppointment(<?php echo $apt['appointment_id']; ?>, '<?php echo htmlspecialchars($apt['first_name'] . ' ' . $apt['last_name']); ?>', '<?php echo $apt['appointment_date']; ?>', '<?php echo $apt['appointment_time']; ?>')">
+                                    onclick="viewAppointmentDetails(<?php echo $apt['appointment_id']; ?>)">
                                     <i class="bi bi-eye"></i> View
                                 </button>
                                 
@@ -116,10 +133,70 @@ if ($result) {
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="appointmentDetails">
-                <p class="text-muted">Loading...</p>
+                <p class="text-muted text-center">Loading appointment details...</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FOLLOW-UP BOOKING MODAL -->
+<div class="modal fade" id="followUpModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-calendar-check"></i> Book Follow-up Appointment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="followUpForm">
+                    <input type="hidden" id="followUpPatientId" />
+                    <input type="hidden" id="followUpAppointmentId" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Doctor</strong></label>
+                        <select class="form-control" id="followUpDoctor" required>
+                            <option value="">Select Doctor</option>
+                            <?php
+                            $doctors = $conn->query("SELECT user_id, first_name, last_name FROM User_Account WHERE role_id = 2 ORDER BY first_name");
+                            while ($doc = $doctors->fetch_assoc()) {
+                                echo '<option value="' . $doc['user_id'] . '">Dr. ' . htmlspecialchars($doc['first_name'] . ' ' . $doc['last_name']) . '</option>';
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Appointment Date</strong></label>
+                        <input type="date" class="form-control" id="followUpDate" min="<?php echo date('Y-m-d'); ?>" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Appointment Time</strong></label>
+                        <select class="form-control" id="followUpTime" required>
+                            <option value="">Select Time</option>
+                            <option value="08:00">8:00 AM</option>
+                            <option value="09:00">9:00 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="14:00">2:00 PM</option>
+                            <option value="15:00">3:00 PM</option>
+                            <option value="16:00">4:00 PM</option>
+                            <option value="17:00">5:00 PM</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Follow-up Notes</strong></label>
+                        <textarea class="form-control" id="followUpNotes" rows="3" placeholder="Optional: Add any additional notes for the follow-up appointment"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="saveFollowUpAppointment()">Book Follow-up</button>
             </div>
         </div>
     </div>
@@ -130,30 +207,166 @@ if ($result) {
         background-color: #0dcaf0;
         color: #000;
     }
+    
+    .appointment-details-section {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        border-left: 4px solid #1e3c72;
+    }
+    
+    .appointment-details-section h6 {
+        color: #1e3c72;
+        font-weight: 700;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+    }
+    
+    .appointment-details-section p {
+        margin: 5px 0;
+        font-size: 0.95rem;
+    }
+    
+    .consultation-notes {
+        background: white;
+        padding: 12px;
+        border-radius: 4px;
+        border-left: 3px solid #17a2b8;
+        margin-top: 10px;
+        font-style: italic;
+        color: #555;
+    }
 </style>
 
 <script>
-function viewAppointment(appointmentId, patientName, date, time) {
-    const details = `
-        <div class="row">
-            <div class="col-md-6">
-                <p><strong>Patient Name:</strong> ${patientName}</p>
-                <p><strong>Date:</strong> ${new Date(date).toLocaleDateString()}</p>
-                <p><strong>Time:</strong> ${time ? new Date('2000-01-01 ' + time).toLocaleTimeString() : 'N/A'}</p>
-            </div>
-            <div class="col-md-6">
-                <p><strong>Appointment ID:</strong> #${String(appointmentId).padStart(5, '0')}</p>
-                <p><strong>Type:</strong> <span class="badge bg-primary">In-Clinic</span></p>
-                <p><strong>Status:</strong> <span class="badge bg-warning">Pending</span></p>
-            </div>
+function viewAppointmentDetails(appointmentId) {
+    fetch('/capstone/secretary/ajax/get-appointment-details.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ appointment_id: appointmentId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayAppointmentDetails(data.appointment);
+        } else {
+            alert('Error: ' + (data.error || 'Failed to load appointment details'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error loading appointment details');
+    });
+}
+
+function displayAppointmentDetails(apt) {
+    const hasFollowUp = apt.consultation_notes && (apt.consultation_notes.toLowerCase().includes('follow-up') || apt.consultation_notes.toLowerCase().includes('follow up') || apt.consultation_notes.toLowerCase().includes('revisit'));
+    
+    let servicesHTML = '';
+    if (apt.services && apt.services.length > 0) {
+        servicesHTML = '<ul style="margin: 10px 0;">';
+        apt.services.forEach(service => {
+            servicesHTML += '<li>' + service.service_name + ' - ₱' + parseFloat(service.initial_deposit).toFixed(2) + '</li>';
+        });
+        servicesHTML += '</ul>';
+    }
+    
+    let detailsHTML = `
+        <div class="appointment-details-section">
+            <h6>Basic Information</h6>
+            <p><strong>Appointment ID:</strong> #${String(apt.appointment_id).padStart(5, '0')}</p>
+            <p><strong>Patient:</strong> ${apt.patient_name}</p>
+            <p><strong>Doctor:</strong> Dr. ${apt.doctor_name}</p>
+            <p><strong>Date:</strong> ${apt.appointment_date}</p>
+            <p><strong>Time:</strong> ${apt.appointment_time}</p>
+            <p><strong>Type:</strong> <span class="badge ${apt.is_online_appointment ? 'bg-warning' : 'bg-primary'}">${apt.is_online_appointment ? 'Online' : 'In-Clinic'}</span></p>
+            <p><strong>Status:</strong> <span class="badge bg-info">${apt.status_name}</span></p>
+        </div>
+        
+        <div class="appointment-details-section">
+            <h6>Services Rendered</h6>
+            ${servicesHTML ? servicesHTML : '<p class="text-muted">No services recorded</p>'}
         </div>
     `;
-    document.getElementById('appointmentDetails').innerHTML = details;
+    
+    if (apt.consultation_notes) {
+        detailsHTML += `
+            <div class="appointment-details-section">
+                <h6>Consultation Notes</h6>
+                <div class="consultation-notes">
+                    ${apt.consultation_notes}
+                </div>
+                ${hasFollowUp ? '<div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 4px; border-left: 3px solid #ffc107;"><strong>📌 Follow-up Recommended:</strong> Doctor notes indicate a follow-up appointment is recommended.</div>' : ''}
+            </div>
+        `;
+    }
+    
+    if (hasFollowUp) {
+        detailsHTML += `
+            <div style="margin-top: 15px; padding: 15px; background: #d4edda; border-radius: 5px; text-align: center;">
+                <p style="margin: 0; color: #155724;"><strong>This appointment has a follow-up recommendation</strong></p>
+                <button type="button" class="btn btn-sm btn-success mt-2" data-bs-dismiss="modal" onclick="showFollowUpBooking(${apt.appointment_id}, ${apt.patient_id})">
+                    <i class="bi bi-calendar-check"></i> Book Follow-up Appointment
+                </button>
+            </div>
+        `;
+    }
+    
+    document.getElementById('appointmentDetails').innerHTML = detailsHTML;
+}
+
+function showFollowUpBooking(appointmentId, patientId) {
+    document.getElementById('followUpAppointmentId').value = appointmentId;
+    document.getElementById('followUpPatientId').value = patientId;
+    document.getElementById('followUpForm').reset();
+    
+    const modal = new bootstrap.Modal(document.getElementById('followUpModal'));
+    modal.show();
+}
+
+function saveFollowUpAppointment() {
+    const form = document.getElementById('followUpForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const followUpData = {
+        patient_id: document.getElementById('followUpPatientId').value,
+        original_appointment_id: document.getElementById('followUpAppointmentId').value,
+        doctor_id: document.getElementById('followUpDoctor').value,
+        appointment_date: document.getElementById('followUpDate').value,
+        appointment_time: document.getElementById('followUpTime').value,
+        follow_up_notes: document.getElementById('followUpNotes').value,
+        is_follow_up: 1
+    };
+    
+    fetch('/capstone/secretary/ajax/book-follow-up.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(followUpData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Follow-up appointment booked successfully!');
+            bootstrap.Modal.getInstance(document.getElementById('followUpModal')).hide();
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to book follow-up appointment'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error booking follow-up appointment');
+    });
 }
 
 function checkInPatient(appointmentId, patientName) {
     if (confirm('Check in ' + patientName + ' to the queue?')) {
-        fetch('../ajax/check-in.php', {
+        fetch('/capstone/secretary/ajax/check-in.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ appointment_id: appointmentId })

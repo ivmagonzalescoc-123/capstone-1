@@ -40,11 +40,6 @@ if ($result) {
             <i class="bi bi-credit-card"></i> Payments
         </button>
     </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="follow-up-tab" data-bs-toggle="tab" data-bs-target="#follow-up" type="button" style="color: #666; font-weight: 600;">
-            <i class="bi bi-calendar-plus"></i> Book Follow-up
-        </button>
-    </li>
 </ul>
 
 <div class="tab-content">
@@ -74,7 +69,7 @@ if ($result) {
                                 <td><?php echo htmlspecialchars(($apt['doc_fname'] ?? '') . ' ' . ($apt['doc_lname'] ?? '')); ?></td>
                                 <td><span class="badge badge-completed">Completed</span></td>
                                 <td>
-                                    <button class="btn btn-sm btn-warning" onclick="generateInvoice(<?php echo $apt['appointment_id']; ?>)">
+                                    <button class="btn btn-sm btn-warning" onclick="generateAndShowInvoice(<?php echo $apt['appointment_id']; ?>)">
                                         <i class="bi bi-printer"></i> Generate Invoice
                                     </button>
                                 </td>
@@ -126,63 +121,132 @@ if ($result) {
         </div>
     </div>
 
-    <!-- BOOK FOLLOW-UP TAB -->
-    <div class="tab-pane fade" id="follow-up" role="tabpanel">
-        <h3 style="color: #1e3c72; font-weight: 700; margin-bottom: 20px;">Book Follow-up Appointments</h3>
-        
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card p-4">
-                    <h5>Select Patient</h5>
-                    <input type="text" class="form-control" id="searchFollowUpPatient" placeholder="Search patient...">
-                    <button class="btn btn-info mt-3 w-100" onclick="searchFollowUp()">Search</button>
-                </div>
+    <!-- BOOK FOLLOW-UP TAB REMOVED - Now in Appointments Module -->
+</div>
+
+<!-- INVOICE MODAL -->
+<div class="modal fade" id="invoiceModal" tabindex="-1" size="lg">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="bi bi-receipt"></i> Invoice</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="col-md-6">
-                <div class="card p-4" id="followUpForm" style="display:none;">
-                    <h5>New Appointment</h5>
-                    <form id="followUpFormElement">
-                        <div class="mb-3">
-                            <label class="form-label">Doctor</label>
-                            <select class="form-control" id="followUpDoctor" required>
-                                <option value="">Select Doctor</option>
-                                <?php
-                                $doctors = $conn->query("SELECT user_id, first_name, last_name FROM User_Account WHERE role_id = 2");
-                                while ($doc = $doctors->fetch_assoc()) {
-                                    echo '<option value="' . $doc['user_id'] . '">' . htmlspecialchars($doc['first_name'] . ' ' . $doc['last_name']) . '</option>';
-                                }
-                                ?>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Date</label>
-                            <input type="date" class="form-control" id="followUpDate" min="<?php echo date('Y-m-d'); ?>" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Time</label>
-                            <select class="form-control" id="followUpTime" required>
-                                <option value="">Select Time</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-success w-100">Book Appointment</button>
-                    </form>
-                </div>
+            <div class="modal-body" id="invoiceContent">
+                <p class="text-center text-muted">Loading invoice...</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="printInvoice()">
+                    <i class="bi bi-printer"></i> Print
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-function generateInvoice(appointmentId) {
-    window.open('../ajax/generate-invoice.php?appointment_id=' + appointmentId, '_blank');
+function generateAndShowInvoice(appointmentId) {
+    fetch('/capstone/secretary/ajax/generate-invoice.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ appointment_id: appointmentId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayInvoice(data.invoice);
+            const modal = new bootstrap.Modal(document.getElementById('invoiceModal'));
+            modal.show();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to generate invoice'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error generating invoice');
+    });
+}
+
+function displayInvoice(invoice) {
+    let servicesHTML = '';
+    if (invoice.services.length > 0) {
+        servicesHTML = '<table class="table table-sm mt-3"><thead><tr><th>Service/Treatment</th><th class="text-end">Amount</th></tr></thead><tbody>';
+        invoice.services.forEach(service => {
+            servicesHTML += `<tr><td>${service.service_name}</td><td class="text-end">₱${parseFloat(service.initial_deposit).toFixed(2)}</td></tr>`;
+        });
+        servicesHTML += '</tbody></table>';
+    }
+
+    const invoiceHTML = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; background: white;">
+            <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1e3c72; padding-bottom: 20px;">
+                <h2 style="color: #1e3c72; margin: 0;">AZUCENA DENTAL CLINIC</h2>
+                <p style="color: #666; margin: 5px 0;">Metz Arcade, Cagayan de Oro</p>
+                <p style="color: #666; margin: 0;">(088) 123-4567</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #1e3c72; margin-bottom: 10px;">INVOICE</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem;">
+                    <div><strong>Invoice #:</strong> INV-${invoice.appointment_id}</div>
+                    <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px; background: #f5f5f5; padding: 15px; border-radius: 5px;">
+                <h5 style="color: #1e3c72; margin-top: 0;">PATIENT INFORMATION</h5>
+                <p style="margin: 5px 0;"><strong>Name:</strong> ${invoice.patient_name}</p>
+                <p style="margin: 5px 0;"><strong>Appointment Date:</strong> ${invoice.appointment_date}</p>
+                <p style="margin: 5px 0;"><strong>Appointment Time:</strong> ${invoice.appointment_time}</p>
+                <p style="margin: 5px 0;"><strong>Doctor:</strong> Dr. ${invoice.doctor_name}</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h5 style="color: #1e3c72;">CHARGES</h5>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tbody>
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 10px; text-align: left;"><strong>Consultation Fee</strong></td>
+                            <td style="padding: 10px; text-align: right;"><strong>₱${parseFloat(invoice.consultation_fee).toFixed(2)}</strong></td>
+                        </tr>
+                        ${servicesHTML}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="background: #e8f4f8; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 1rem;">
+                    <div style="text-align: left;">
+                        <p style="margin: 5px 0;">Services Total:</p>
+                        <p style="margin: 5px 0;"><strong>TOTAL AMOUNT:</strong></p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="margin: 5px 0;">₱${parseFloat(invoice.services_total).toFixed(2)}</p>
+                        <p style="margin: 5px 0; color: #1e3c72; font-size: 1.2rem;"><strong>₱${parseFloat(invoice.total_amount).toFixed(2)}</strong></p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 0.85rem;">
+                <p style="margin: 5px 0;">Thank you for choosing Azucena Dental Clinic!</p>
+                <p style="margin: 5px 0;">Please settle your payment at the clinic or contact us for payment arrangements.</p>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('invoiceContent').innerHTML = invoiceHTML;
+}
+
+function printInvoice() {
+    const printWindow = window.open('', '', 'height=600,width=800');
+    printWindow.document.write(document.getElementById('invoiceContent').innerHTML);
+    printWindow.document.close();
+    printWindow.print();
 }
 
 function searchPayments() {
     alert('Payment search functionality');
-}
-
-function searchFollowUp() {
-    alert('Follow-up booking search functionality');
 }
 
 // Update nav-link colors on tab change
