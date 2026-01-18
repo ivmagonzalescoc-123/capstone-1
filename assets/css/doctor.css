@@ -1,0 +1,16 @@
+/* Doctor Dashboard Styles - Extends admin.css */
+
+@import url('./admin.css');
+
+:root {
+    --doctor-color: #28a745;
+}
+
+.sidebar .nav-link.active {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-left-color: var(--doctor-color);
+}
+
+.navbar {
+    background: linear-gradient(135deg, var(--doctor-color) 0%, #2dbc4e 100%);
+}

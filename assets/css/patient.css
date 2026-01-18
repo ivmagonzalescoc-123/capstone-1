@@ -1,0 +1,16 @@
+/* Patient Dashboard Styles - Extends admin.css */
+
+@import url('./admin.css');
+
+:root {
+    --patient-color: #17a2b8;
+}
+
+.sidebar .nav-link.active {
+    background-color: rgba(23, 162, 184, 0.1);
+    border-left-color: var(--patient-color);
+}
+
+.navbar {
+    background: linear-gradient(135deg, var(--patient-color) 0%, #20c997 100%);
+}

@@ -1,0 +1,31 @@
+# Rewrite Rules for Clean URLs
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /capstone/
+    
+    # Prevent access to sensitive files
+    <FilesMatch "\.(sql|log|md)$">
+        Order Allow,Deny
+        Deny from all
+    </FilesMatch>
+    
+    # Block access to config and classes directories
+    RewriteRule ^(config|classes)/ - [F,L]
+</IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Prevent directory browsing
+Options -Indexes
+
+# Set default document
+DirectoryIndex index.php index.html
+
+# File upload settings
+php_value upload_max_filesize 5M
+php_value post_max_size 5M

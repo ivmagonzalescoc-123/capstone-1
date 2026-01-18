@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd c:\\\\xampp\\\\mysql\\\\bin; \\.\\\\mysql\\.exe -u root azucena_dental -e \"\nALTER TABLE Patients ADD COLUMN user_id INT\\(11\\) AFTER patients_id;\nALTER TABLE Patients ADD FOREIGN KEY \\(user_id\\) REFERENCES User_Account\\(user_id\\);\nSHOW COLUMNS FROM Patients;\n\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
